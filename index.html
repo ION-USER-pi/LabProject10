@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✉️ labproject10</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #ecf0f1;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #f6f8f9 0%, #e5ebee 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .email-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+        .email-container:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 10px rgba(52,152,219,0.2);
+        }
+        .file-upload {
+            position: relative;
+            overflow: hidden;
+        }
+        .file-upload input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        .file-upload-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .file-upload-btn:hover {
+            background-color: #2980b9;
+        }
+        #submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        #submit-btn:hover {
+            background-color: #27ae60;
+            transform: translateY(-3px);
+        }
+        .status-message {
+            margin-top: 15px;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .status-success {
+            background-color: rgba(46, 204, 113, 0.1);
+            color: #27ae60;
+        }
+        .status-error {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: #c0392b;
+        }
+        @media (max-width: 600px) {
+            .email-container {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <form id="email-form" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="text" class="form-control" placeholder="Sender Name" required>
+            </div>
+            <div class="form-group">
+                <input type="email" class="form-control" placeholder="Sender Email" required>
+            </div>
+            <div class="form-group">
+                <input type="email" class="form-control" placeholder="Recipient Email" required>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" placeholder="Subject" required>
+            </div>
+            <div class="form-group">
+                <textarea class="form-control" placeholder="Email Body" rows="4" required></textarea>
+            </div>
+            <div class="form-group file-upload">
+                <input type="file" id="file-upload" multiple>
+                <label for="file-upload" class="file-upload-btn">
+                    <i class="fas fa-paperclip"></i> Attach Files
+                </label>
+            </div>
+            <button type="submit" id="submit-btn">
+                <i class="fas fa-paper-plane"></i> Send Email
+            </button>
+            <div id="status-message" class="status-message"></div>
+        </form>
+    </div>
+
+    <script>
+    $(document).ready(function() {
+        // Animated hover effects
+        $('.form-control').on('focus', function() {
+            $(this).css('transform', 'scale(1.02)');
+        }).on('blur', function() {
+            $(this).css('transform', 'scale(1)');
+        });
+
+        // File upload preview
+        $('#file-upload').on('change', function() {
+            var files = $(this)[0].files;
+            var fileNames = Array.from(files).map(f => f.name).join(', ');
+            $('.file-upload-btn').html(`<i class="fas fa-paperclip"></i> ${files.length} file(s) selected`);
+        });
+
+        // Form submission
+        $('#email-form').on('submit', function(e) {
+            e.preventDefault();
+            
+            var formData = new FormData(this);
+
+            $.ajax({
+                url: 'process_email.php',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    $('#status-message')
+                        .removeClass('status-error')
+                        .addClass('status-success')
+                        .html('<i class="fas fa-check-circle"></i> Email sent successfully!');
+                },
+                error: function() {
+                    $('#status-message')
+                        .removeClass('status-success')
+                        .addClass('status-error')
+                        .html('<i class="fas fa-times-circle"></i> Failed to send email');
+                }
+            });
+        });
+    });
+    </script>
+</body>
+</html>
